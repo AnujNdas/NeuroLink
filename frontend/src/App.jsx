@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
-import AILab from "./pages/AILab";
+import AILab from "./pages/AiLab";
 import Insights from "./pages/Insights";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth"; // We'll create this next
