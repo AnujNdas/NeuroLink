@@ -1,0 +1,8 @@
+| Role                 | Color                         | Usage                     |
+| -------------------- | ----------------------------- | ------------------------- |
+| **Background**       | `#0f0c29 → #302b63 → #24243e` | Main page gradient        |
+| **Primary Accent**   | `#06b6d4` (Cyan)              | Buttons, glow, hover      |
+| **Secondary Accent** | `#a855f7` (Purple)            | Highlights, text gradient |
+| **Card Glass**       | `rgba(255,255,255,0.08)`      | Glassmorphism backgrounds |
+| **Border Glow**      | `#22d3ee` (Cyan glow shadow)  | Subtle glow under cards   |
+| **Text**             | `#ffffff` / `#d1d5db`         | White and muted grey text |

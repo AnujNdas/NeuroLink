@@ -1,0 +1,32 @@
+ ┌──────────────────────────┐
+ │        Frontend          │
+ │ React + Tailwind + AI UI │
+ │  ↓ Webcam input          │
+ │  ↓ User interaction data │
+ └──────────┬───────────────┘
+            │
+            ▼
+ ┌──────────────────────────┐
+ │       Backend API        │
+ │  Node.js + Express.js    │
+ │  - Emotion & behavior API│
+ │  - AI Suggestion Engine  │
+ └──────────┬───────────────┘
+            │
+            ▼
+ ┌──────────────────────────┐
+ │     AI/ML Processing     │
+ │ TensorFlow.js + OpenAI   │
+ │ - Facial analysis         │
+ │ - Pattern recognition     │
+ │ - Context responses       │
+ └──────────┬───────────────┘
+            │
+            ▼
+ ┌──────────────────────────┐
+ │        Database           │
+ │   MongoDB (Mongoose)     │
+ │ - User data, sessions     │
+ │ - Emotion logs            │
+ │ - Recommendations         │
+ └──────────────────────────┘

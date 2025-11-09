@@ -1,0 +1,12 @@
+{
+  "name": "neurolink-ai",
+  "version": "1.0.0",
+  "description": "AI-powered mental state-aware productivity platform",
+  "scripts": {
+    "start": "concurrently \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\""
+  },
+  "dependencies": {
+    "concurrently": "^9.2.1",
+    "react-icons": "^5.5.0"
+  }
+}
