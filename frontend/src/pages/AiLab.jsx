@@ -15,6 +15,7 @@ import { FiCopy, FiCheck } from "react-icons/fi";
 import { Bot, User, Mic, MicOff } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
+import API from "../services/apiClient"; // ✅ <-- import centralized axios instance
 
 const TABS = [
   {
@@ -124,152 +125,142 @@ const AiLab = () => {
     });
   };
 
-  // Main analysis runner — routes by activeTab
-  const runAnalysis = async (textToAnalyze) => {
-    const text = (textToAnalyze ?? input ?? "").trim();
-    if (!text) return;
+// Main analysis runner — routes by activeTab
+const runAnalysis = async (textToAnalyze) => {
+  const text = (textToAnalyze ?? input ?? "").trim();
+  if (!text) return;
 
-    // show user message in chat (if not voice autopushed)
-    if (!textToAnalyze) addUserMessage(text);
+  // show user message in chat (if not voice autopushed)
+  if (!textToAnalyze) addUserMessage(text);
 
-    setIsProcessing(true);
-    try {
-      const basePayload = { region: sessionRegion, userId };
-      // Route selection
-      let endpoint = "https://neurolink-backend.onrender.com/api/ai/analyze";
-      let payload = { ...basePayload, inputText: text };
+  setIsProcessing(true);
 
-      if (activeTab === "emotion-detector") {
-        endpoint = "https://neurolink-backend.onrender.com/api/ai/insights"; // your insights route expects a GET normally, but keeping POST here per your backend design
-        payload = { ...basePayload, inputText: text };
-      } else if (activeTab === "code-generator") {
-        endpoint = "https://neurolink-backend.onrender.com/api/ai/code";
-        // For code/prompt generation some backends expect "prompt" not "inputText"
-        payload = { ...basePayload, prompt: text };
-      }
+  try {
+    const basePayload = { region: sessionRegion, userId };
+    let endpoint = "/ai/analyze";
+    let payload = { ...basePayload, inputText: text };
 
-      // Send request (assumes frontend is served such that relative path works,
-      // otherwise change to full URL like https://neurolink-backend.onrender.com/api/ai/code)
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}),
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const errText = await res.text().catch(() => "");
-        console.error("AI API error:", res.status, errText);
-        addAiMessage(`⚠️ Server error: ${res.status}`);
-        return;
-      }
-
-      const data = await res.json();
-
-      // Normalize possible shapes
-      const aiResult =
-        data.analysis?.aiResult ||
-        data.aiResult ||
-        data.result ||
-        data.aiResult?.aiResult ||
-        data ||
-        {};
-
-      // Build reply depending on tab
-      let reply = "";
-
-      if (activeTab === "text-analyzer") {
-        if (aiResult.summary) reply += `### 🧠 Summary\n${aiResult.summary}\n\n`;
-        if (aiResult.suggestion) {
-          reply += `### ✅ Suggestions\n`;
-          reply += Array.isArray(aiResult.suggestion)
-            ? aiResult.suggestion.map((s) => `- ${s}`).join("\n")
-            : aiResult.suggestion;
-          reply += "\n\n";
-        }
-      } else if (activeTab === "emotion-detector") {
-        if (aiResult.summary) reply += `### 🧠 Summary\n${aiResult.summary}\n\n`;
-        const emotion = aiResult.sentiment || aiResult.emotion || "neutral";
-        const emotionMap = {
-          positive: "😊 Positive / Happy",
-          negative: "😔 Negative / Sad",
-          neutral: "😐 Neutral",
-          angry: "😡 Angry",
-          fear: "😨 Fear / Anxiety",
-          surprise: "😲 Surprised",
-        };
-        reply += `### ❤️ Emotion\n${
-          emotionMap[emotion.toLowerCase()] || emotion
-        }\n\n`;
-      } else if (activeTab === "prompt-generator") {
-        // preferred backend keys: language, html, code, prompt
-        const language = (aiResult.language || "").toString().toLowerCase();
-        const html = aiResult.html?.toString?.() ?? "";
-        const code = aiResult.code?.toString?.() ?? "";
-        const promptOut = aiResult.prompt?.toString?.() ?? "";
-
-        if (html && html.trim()) {
-          // Use HTML code block
-          reply += `🌐 **Generated HTML**\n\`\`\`html\n${html.trim()}\n\`\`\``;
-        } else if (code && code.trim()) {
-          // Choose proper fence from language
-          const langMap = {
-            python: "python",
-            js: "js",
-            javascript: "js",
-            java: "java",
-            c: "c",
-            cpp: "cpp",
-            cplusplus: "cpp",
-            html: "html",
-            css: "css",
-            json: "json",
-            php: "php",
-            go: "go",
-            rust: "rust",
-            ts: "ts",
-            typescript: "ts",
-          };
-          const fence = langMap[language] || "js";
-          const prettyLang = (language || "Code").toUpperCase();
-          reply += `💻 **Generated ${prettyLang}**\n\`\`\`${fence}\n${code.trim()}\n\`\`\``;
-        } else if (promptOut && promptOut.trim()) {
-          reply += `✨ **Generated Prompt**\n${promptOut.trim()}`;
-        } else {
-          // fallback: attempt to detect from strings in aiResult or raw
-          const raw =
-            typeof aiResult === "string"
-              ? aiResult
-              : aiResult.summary ||
-                aiResult.output ||
-                aiResult.result ||
-                JSON.stringify(aiResult, null, 2);
-
-          if (/<[a-z!][\s\S]*>/i.test(raw)) {
-            reply += `🌐 **Detected HTML**\n\`\`\`html\n${raw.trim()}\n\`\`\``;
-          } else if (/function|const|let|=>|console\.log/.test(raw)) {
-            reply += `💻 **Detected JavaScript Code**\n\`\`\`js\n${raw.trim()}\n\`\`\``;
-          } else if (/def |import |print\(|:\n\s/.test(raw)) {
-            reply += `🐍 **Detected Python Code**\n\`\`\`python\n${raw.trim()}\n\`\`\``;
-          } else {
-            reply += raw.trim() || "No output detected.";
-          }
-        }
-      }
-
-      if (!reply) reply = "No meaningful AI response.";
-
-      addAiMessage(reply.trim());
-    } catch (err) {
-      console.error("AI call error:", err);
-      addAiMessage("❌ Network error while contacting AI backend.");
-    } finally {
-      setInput("");
-      setIsProcessing(false);
+    if (activeTab === "emotion-detector") {
+      endpoint = "/ai/insights";
+    } else if (activeTab === "code-generator") {
+      endpoint = "/ai/code";
+      payload = { ...basePayload, prompt: text };
     }
-  };
+
+    // ✅ Axios request
+    const res = await API.post(endpoint, payload, {
+      headers: sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {},
+    });
+
+    // ✅ Axios stores the response data in res.data
+    const data = res.data;
+
+// Normalize possible shapes
+const aiResult =
+  data.analysis?.aiResult ||
+  data.aiResult ||
+  data.result ||
+  (data.success
+    ? { language: data.language, code: data.code, html: data.html }
+    : null) ||
+  data ||
+  {};
+
+
+    // Build reply depending on tab
+    let reply = "";
+
+    if (activeTab === "text-analyzer") {
+      if (aiResult.summary) reply += `### 🧠 Summary\n${aiResult.summary}\n\n`;
+      if (aiResult.suggestion) {
+        reply += `### ✅ Suggestions\n`;
+        reply += Array.isArray(aiResult.suggestion)
+          ? aiResult.suggestion.map((s) => `- ${s}`).join("\n")
+          : aiResult.suggestion;
+        reply += "\n\n";
+      }
+    } else if (activeTab === "emotion-detector") {
+      if (aiResult.summary) reply += `### 🧠 Summary\n${aiResult.summary}\n\n`;
+      const emotion = aiResult.sentiment || aiResult.emotion || "neutral";
+      const emotionMap = {
+        positive: "😊 Positive / Happy",
+        negative: "😔 Negative / Sad",
+        neutral: "😐 Neutral",
+        angry: "😡 Angry",
+        fear: "😨 Fear / Anxiety",
+        surprise: "😲 Surprised",
+      };
+      reply += `### ❤️ Emotion\n${
+        emotionMap[emotion.toLowerCase()] || emotion
+      }\n\n`;
+    } else if (activeTab === "code-generator") {
+      const language = (aiResult.language || "").toString().toLowerCase();
+      const html = aiResult.html?.toString?.() ?? "";
+      const code = aiResult.code?.toString?.() ?? "";
+      const promptOut = aiResult.prompt?.toString?.() ?? "";
+
+      if (html && html.trim()) {
+        reply += `🌐 **Generated HTML**\n\`\`\`html\n${html.trim()}\n\`\`\``;
+      } else if (code && code.trim()) {
+        const langMap = {
+          python: "python",
+          js: "js",
+          javascript: "js",
+          java: "java",
+          c: "c",
+          cpp: "cpp",
+          cplusplus: "cpp",
+          html: "html",
+          css: "css",
+          json: "json",
+          php: "php",
+          go: "go",
+          rust: "rust",
+          ts: "ts",
+          typescript: "ts",
+        };
+        const fence = langMap[language] || "js";
+        const prettyLang = (language || "Code").toUpperCase();
+        reply += `💻 **Generated ${prettyLang}**\n\`\`\`${fence}\n${code.trim()}\n\`\`\``;
+      } else if (promptOut && promptOut.trim()) {
+        reply += `✨ **Generated Prompt**\n${promptOut.trim()}`;
+      } else {
+        const raw =
+          typeof aiResult === "string"
+            ? aiResult
+            : aiResult.summary ||
+              aiResult.output ||
+              aiResult.result ||
+              JSON.stringify(aiResult, null, 2);
+
+        if (/<[a-z!][\s\S]*>/i.test(raw)) {
+          reply += `🌐 **Detected HTML**\n\`\`\`html\n${raw.trim()}\n\`\`\``;
+        } else if (/function|const|let|=>|console\.log/.test(raw)) {
+          reply += `💻 **Detected JavaScript Code**\n\`\`\`js\n${raw.trim()}\n\`\`\``;
+        } else if (/def |import |print\(|:\n\s/.test(raw)) {
+          reply += `🐍 **Detected Python Code**\n\`\`\`python\n${raw.trim()}\n\`\`\``;
+        } else {
+          reply += raw.trim() || "No output detected.";
+        }
+      }
+    }
+
+    if (!reply) reply = "No meaningful AI response.";
+    addAiMessage(reply.trim());
+
+  } catch (err) {
+    console.error("AI call error:", err);
+
+    if (err.response) {
+      addAiMessage(`⚠️ Server error: ${err.response.status} — ${err.response.data?.message || "Something went wrong."}`);
+    } else {
+      addAiMessage("❌ Network error while contacting AI backend.");
+    }
+  } finally {
+    setInput("");
+    setIsProcessing(false);
+  }
+};
 
   const handleSend = (e) => {
     e?.preventDefault();

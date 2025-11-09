@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import API from "../services/apiClient"; // ✅ Use shared axios instance
 import {
   FiHome,
   FiCpu,
@@ -20,20 +20,18 @@ const Sidebar = () => {
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024) {
-        // collapse if screen < 1024px (tablet & below)
         setCollapsed(true);
       } else {
         setCollapsed(false);
       }
     };
 
-    handleResize(); // run once on mount
+    handleResize();
     window.addEventListener("resize", handleResize);
-
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // ✅ Fetch latest sentiment periodically
+  // ✅ Fetch latest sentiment periodically using API client
   useEffect(() => {
     const fetchLatestSentiment = async () => {
       if (!userId) {
@@ -42,9 +40,7 @@ const Sidebar = () => {
       }
 
       try {
-        const res = await axios.get(
-          `https://neurolink-backend.onrender.com/api/ai/latest/${userId}`
-        );
+        const res = await API.get(`/ai/latest/${userId}`);
         const clean = res.data?.sentiment
           ? res.data.sentiment.toLowerCase()
           : "neutral";
