@@ -142,7 +142,7 @@ const AiLab = () => {
       if (activeTab === "emotion-detector") {
         endpoint = "https://neurolink-backend.onrender.com/api/ai/insights"; // your insights route expects a GET normally, but keeping POST here per your backend design
         payload = { ...basePayload, inputText: text };
-      } else if (activeTab === "prompt-generator") {
+      } else if (activeTab === "code-generator") {
         endpoint = "https://neurolink-backend.onrender.com/api/ai/code";
         // For code/prompt generation some backends expect "prompt" not "inputText"
         payload = { ...basePayload, prompt: text };
