@@ -42,7 +42,7 @@ const Settings = () => {
 
           {/* Region Selector */}
           <div className="md:col-span-2">
-            <label className="flex items-center block gap-2 mb-2 text-sm text-gray-300">
+            <label className="flex items-center gap-2 mb-2 text-sm text-gray-300">
               <FiMapPin /> Region / Location
             </label>
             <select

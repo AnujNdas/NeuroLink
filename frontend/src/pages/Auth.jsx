@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api/auth", // change when deployed
+  baseURL: "https://neurolink-backend.onrender.com/api/auth", // change when deployed
 });
 
 const Auth = () => {
