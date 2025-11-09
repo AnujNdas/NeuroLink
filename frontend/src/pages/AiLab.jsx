@@ -136,20 +136,20 @@ const AiLab = () => {
     try {
       const basePayload = { region: sessionRegion, userId };
       // Route selection
-      let endpoint = "http://localhost:5000/api/ai/analyze";
+      let endpoint = "https://neurolink-backend.onrender.com/api/ai/analyze";
       let payload = { ...basePayload, inputText: text };
 
       if (activeTab === "emotion-detector") {
-        endpoint = "http://localhost:5000/api/ai/insights"; // your insights route expects a GET normally, but keeping POST here per your backend design
+        endpoint = "https://neurolink-backend.onrender.com/api/ai/insights"; // your insights route expects a GET normally, but keeping POST here per your backend design
         payload = { ...basePayload, inputText: text };
       } else if (activeTab === "prompt-generator") {
-        endpoint = "http://localhost:5000/api/ai/code";
+        endpoint = "https://neurolink-backend.onrender.com/api/ai/code";
         // For code/prompt generation some backends expect "prompt" not "inputText"
         payload = { ...basePayload, prompt: text };
       }
 
       // Send request (assumes frontend is served such that relative path works,
-      // otherwise change to full URL like http://localhost:5000/api/ai/code)
+      // otherwise change to full URL like https://neurolink-backend.onrender.com/api/ai/code)
       const res = await fetch(endpoint, {
         method: "POST",
         headers: {

@@ -86,7 +86,7 @@ export default function Insights() {
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    fetch("http://localhost:5000/api/ai/insights")
+    fetch("https://neurolink-backend.onrender.com/api/ai/insights")
       .then((r) => {
         if (!r.ok) throw new Error(`Server ${r.status}`);
         return r.json();

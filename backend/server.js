@@ -12,7 +12,12 @@ connectDB();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: ["https://neurolink-yftg.onrender.com"], // ⬅️ replace with your actual deployed frontend URL
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+}));
+
 app.use(express.json());
 
 // Routes

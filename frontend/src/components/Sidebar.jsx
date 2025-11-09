@@ -43,7 +43,7 @@ const Sidebar = () => {
 
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/ai/latest/${userId}`
+          `https://neurolink-backend.onrender.com/api/ai/latest/${userId}`
         );
         const clean = res.data?.sentiment
           ? res.data.sentiment.toLowerCase()

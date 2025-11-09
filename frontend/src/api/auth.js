@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api/auth", // change to your backend URL if deployed
+  baseURL: "https://neurolink-backend.onrender.com/api/auth", // change to your backend URL if deployed
 });
 
 // Signup user
